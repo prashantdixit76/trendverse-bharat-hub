@@ -481,7 +481,7 @@ function SettingsManager() {
   );
 }
 
-function Section({ title, children }: any) { return <div className="bg-card border border-border rounded-lg p-5 space-y-3"><h3 className="font-bold">{title}</h3>{children}</div>; }
-function Field({ label, v, on, textarea }: any) {
+function Section({ title, children }: { title: string; children: any }) { return <div className="bg-card border border-border rounded-lg p-5 space-y-3"><h3 className="font-bold">{title}</h3>{children}</div>; }
+function Field({ label, v, on, textarea }: { label: string; v: any; on: (v: string) => void; textarea?: boolean }) {
   return <div><Label>{label}</Label>{textarea ? <Textarea rows={3} value={v || ""} onChange={(e) => on(e.target.value)} /> : <Input value={v || ""} onChange={(e) => on(e.target.value)} />}</div>;
 }
