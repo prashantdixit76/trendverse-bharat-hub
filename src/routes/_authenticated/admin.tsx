@@ -15,7 +15,9 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { slugify, formatDate } from "@/lib/slug";
 import { uploadMedia, deleteMedia } from "@/lib/media";
-import { Trash2, Edit, Plus, LogOut, Image as ImageIcon, Copy } from "lucide-react";
+import { Trash2, Edit, Plus, LogOut, Image as ImageIcon, Copy, UserPlus } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { listAdmins, createAdmin, deleteAdmin } from "@/lib/admins.functions";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — TVB" }, { name: "robots", content: "noindex" }] }),
@@ -62,6 +64,7 @@ function AdminPage() {
             <TabsTrigger value="categories">Categories</TabsTrigger>
             <TabsTrigger value="media">Media</TabsTrigger>
             <TabsTrigger value="ads">Ads</TabsTrigger>
+            <TabsTrigger value="users">Users</TabsTrigger>
             <TabsTrigger value="settings">Settings</TabsTrigger>
           </TabsList>
           <TabsContent value="dashboard" className="mt-6"><Dashboard /></TabsContent>
@@ -71,6 +74,7 @@ function AdminPage() {
           <TabsContent value="categories" className="mt-6"><CategoryManager /></TabsContent>
           <TabsContent value="media" className="mt-6"><MediaManager userId={user!.id} /></TabsContent>
           <TabsContent value="ads" className="mt-6"><AdsManager /></TabsContent>
+          <TabsContent value="users" className="mt-6"><UsersManager currentUserId={user!.id} /></TabsContent>
           <TabsContent value="settings" className="mt-6"><SettingsManager /></TabsContent>
         </Tabs>
       </main>
@@ -484,4 +488,104 @@ function SettingsManager() {
 function Section({ title, children }: { title: string; children: any }) { return <div className="bg-card border border-border rounded-lg p-5 space-y-3"><h3 className="font-bold">{title}</h3>{children}</div>; }
 function Field({ label, v, on, textarea }: { label: string; v: any; on: (v: string) => void; textarea?: boolean }) {
   return <div><Label>{label}</Label>{textarea ? <Textarea rows={3} value={v || ""} onChange={(e) => on(e.target.value)} /> : <Input value={v || ""} onChange={(e) => on(e.target.value)} />}</div>;
+}
+
+function UsersManager({ currentUserId }: { currentUserId: string }) {
+  const listFn = useServerFn(listAdmins);
+  const createFn = useServerFn(createAdmin);
+  const deleteFn = useServerFn(deleteAdmin);
+  const [form, setForm] = useState({ email: "", password: "", role: "admin" as "admin" | "editor" });
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const { data, refetch, isLoading } = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: () => listFn(),
+  });
+
+  async function add() {
+    if (!form.email || form.password.length < 8) return toast.error("Email aur min 8-char password chahiye");
+    setBusy(true);
+    try {
+      await createFn({ data: form });
+      toast.success("User added");
+      setForm({ email: "", password: "", role: "admin" });
+      setOpen(false);
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to add user");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove(id: string, email: string) {
+    if (!confirm(`Delete admin ${email}? Ye action permanent hai.`)) return;
+    try {
+      await deleteFn({ data: { userId: id } });
+      toast.success("User deleted");
+      refetch();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to delete");
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="display text-2xl font-bold">Admin Users</h2>
+          <p className="text-sm text-muted-foreground">Sirf admin role wale users hi admin panel access kar sakte hain.</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="bg-brand text-brand-foreground"><UserPlus className="h-4 w-4 mr-1" /> New User</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Create Admin User</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div><Label>Email</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} /></div>
+              <div><Label>Password (min 8 chars)</Label><Input type="text" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} /></div>
+              <div><Label>Role</Label>
+                <Select value={form.role} onValueChange={(v: "admin" | "editor") => setForm({ ...form, role: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="admin">Admin (full access)</SelectItem>
+                    <SelectItem value="editor">Editor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
+              <Button onClick={add} disabled={busy} className="bg-brand text-brand-foreground">{busy ? "Creating…" : "Create"}</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-secondary text-left">
+            <tr><th className="p-3">Email</th><th className="p-3">Role</th><th className="p-3">Created</th><th className="p-3"></th></tr>
+          </thead>
+          <tbody>
+            {isLoading && <tr><td colSpan={4} className="p-6 text-center text-muted-foreground">Loading…</td></tr>}
+            {data?.map((u) => (
+              <tr key={u.id} className="border-t border-border">
+                <td className="p-3 font-medium">{u.email}{u.id === currentUserId && <span className="ml-2 text-xs text-muted-foreground">(you)</span>}</td>
+                <td className="p-3"><Badge variant={u.role === "admin" ? "default" : "secondary"}>{u.role}</Badge></td>
+                <td className="p-3 text-muted-foreground">{u.created_at ? formatDate(u.created_at) : "—"}</td>
+                <td className="p-3 text-right">
+                  <Button size="sm" variant="ghost" disabled={u.id === currentUserId} onClick={() => remove(u.id, u.email)}>
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+            {!isLoading && data?.length === 0 && <tr><td colSpan={4} className="p-8 text-center text-muted-foreground">No admin users yet.</td></tr>}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
