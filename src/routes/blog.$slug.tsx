@@ -11,15 +11,19 @@ export const Route = createFileRoute("/blog/$slug")({
     if (!data) throw notFound();
     return data;
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData ? [
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [] };
+    const desc = loaderData.meta_description || loaderData.short_description || "";
+    const img = loaderData.og_image || loaderData.cover_image || "";
+    const meta: any[] = [
       { title: loaderData.meta_title || `${loaderData.title} — TVB` },
-      { name: "description", content: loaderData.meta_description || loaderData.short_description || "" },
-      { property: "og:title", content: loaderData.title },
-      { property: "og:description", content: loaderData.meta_description || loaderData.short_description || "" },
-      ...(loaderData.og_image || loaderData.cover_image ? [{ property: "og:image", content: loaderData.og_image || loaderData.cover_image }] : []),
-    ] : [],
-  }),
+      { name: "description", content: desc },
+      { property: "og:title", content: String(loaderData.title) },
+      { property: "og:description", content: desc },
+    ];
+    if (img) meta.push({ property: "og:image", content: img });
+    return { meta };
+  },
   errorComponent: ({ error }) => <SiteLayout><div className="container mx-auto px-4 py-20 text-center"><p>{error.message}</p></div></SiteLayout>,
   notFoundComponent: () => <SiteLayout><div className="container mx-auto px-4 py-20 text-center"><h1 className="display text-3xl">Blog not found</h1><Link to="/blogs" className="text-brand underline mt-4 inline-block">Back to Blogs</Link></div></SiteLayout>,
   component: BlogSingle,

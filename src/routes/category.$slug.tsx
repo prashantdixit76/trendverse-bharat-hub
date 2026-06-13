@@ -10,12 +10,14 @@ export const Route = createFileRoute("/category/$slug")({
     if (!data) throw notFound();
     return data;
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData ? [
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [] };
+    const meta: any[] = [
       { title: `${loaderData.name} — Trend Verse Bharat` },
       { name: "description", content: loaderData.description || `${loaderData.name} news and blogs on TVB.` },
-    ] : [],
-  }),
+    ];
+    return { meta };
+  },
   notFoundComponent: () => <SiteLayout><div className="container mx-auto px-4 py-20 text-center"><h1 className="display text-3xl">Category not found</h1></div></SiteLayout>,
   component: CategoryPage,
 });

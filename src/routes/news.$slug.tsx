@@ -12,17 +12,21 @@ export const Route = createFileRoute("/news/$slug")({
     if (!data) throw notFound();
     return data;
   },
-  head: ({ loaderData }) => ({
-    meta: loaderData ? [
+  head: ({ loaderData }) => {
+    if (!loaderData) return { meta: [] };
+    const desc = loaderData.meta_description || loaderData.short_description || "";
+    const img = loaderData.og_image || loaderData.featured_image || "";
+    const meta: any[] = [
       { title: loaderData.meta_title || `${loaderData.title} — TVB` },
-      { name: "description", content: loaderData.meta_description || loaderData.short_description || "" },
-      { property: "og:title", content: loaderData.meta_title || loaderData.title },
-      { property: "og:description", content: loaderData.meta_description || loaderData.short_description || "" },
-      ...(loaderData.og_image || loaderData.featured_image ? [{ property: "og:image", content: loaderData.og_image || loaderData.featured_image }] : []),
+      { name: "description", content: desc },
+      { property: "og:title", content: loaderData.meta_title || String(loaderData.title) },
+      { property: "og:description", content: desc },
       { property: "og:type", content: "article" },
-      ...(loaderData.canonical_url ? [{ rel: "canonical", href: loaderData.canonical_url } as any] : []),
-    ] : [],
-  }),
+    ];
+    if (img) meta.push({ property: "og:image", content: img });
+    const links: any[] = loaderData.canonical_url ? [{ rel: "canonical", href: loaderData.canonical_url }] : [];
+    return { meta, links };
+  },
   errorComponent: ({ error }) => <SiteLayout><div className="container mx-auto px-4 py-20 text-center"><p>{error.message}</p></div></SiteLayout>,
   notFoundComponent: () => <SiteLayout><div className="container mx-auto px-4 py-20 text-center"><h1 className="display text-3xl">Story not found</h1><Link to="/news" className="text-brand underline mt-4 inline-block">Back to News</Link></div></SiteLayout>,
   component: NewsSingle,
