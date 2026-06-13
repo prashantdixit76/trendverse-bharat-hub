@@ -54,7 +54,7 @@ function Home() {
         {empty && (
           <div className="border border-dashed border-border rounded-xl p-10 text-center bg-card">
             <h2 className="display text-2xl font-bold">Welcome to Trend Verse Bharat</h2>
-            <p className="text-muted-foreground mt-2">No published content yet. Sign in and visit <Link to="/admin" className="text-brand underline">/admin</Link> to publish your first story.</p>
+            <p className="text-muted-foreground mt-2">Fresh stories are on the way. Please check back shortly.</p>
           </div>
         )}
 
