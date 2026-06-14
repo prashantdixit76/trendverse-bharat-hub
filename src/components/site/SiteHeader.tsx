@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { LanguageToggle } from "@/components/site/LanguageToggle";
 
 const NAV = [
   { to: "/", label: "Home" },
@@ -34,7 +35,8 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <LanguageToggle />
           <Link to="/search" className="hidden sm:inline-flex"><Button variant="ghost" size="icon" aria-label="Search"><Search className="h-4 w-4" /></Button></Link>
           <button onClick={() => setOpen((o) => !o)} className="md:hidden p-2" aria-label="Menu">
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
