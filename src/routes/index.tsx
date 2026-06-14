@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { NewsCard } from "@/components/site/NewsCard";
 import { AdSlot } from "@/components/site/AdSlot";
+import { TrendingTicker } from "@/components/site/TrendingTicker";
+import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
@@ -59,9 +61,9 @@ function Home() {
         )}
 
         {data && data.featured.length > 0 && (
-          <section className="grid gap-6 lg:grid-cols-3 mb-12">
+          <section className="grid gap-6 lg:grid-cols-3 mb-8">
             <div className="lg:col-span-2">
-              <NewsCard item={data.featured[0]} variant="hero" />
+              <FeaturedCarousel items={data.featured} />
             </div>
             <div className="space-y-1">
               <h3 className="display text-xl font-bold mb-2 border-b-2 border-brand pb-2">Trending</h3>
@@ -70,6 +72,10 @@ function Home() {
               ))}
             </div>
           </section>
+        )}
+
+        {data && (data.trending.length > 0 || data.latest.length > 0) && (
+          <TrendingTicker items={(data.trending.length ? data.trending : data.latest).slice(0, 10)} />
         )}
 
         {data && data.latest.length > 0 && (
