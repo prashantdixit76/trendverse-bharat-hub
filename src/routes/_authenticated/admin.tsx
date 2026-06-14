@@ -18,6 +18,7 @@ import { uploadMedia, deleteMedia } from "@/lib/media";
 import { Trash2, Edit, Plus, LogOut, Image as ImageIcon, Copy, UserPlus } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
 import { listAdmins, createAdmin, deleteAdmin } from "@/lib/admins.functions";
+import { ImageField } from "@/components/admin/ImageField";
 
 export const Route = createFileRoute("/_authenticated/admin")({
   head: () => ({ meta: [{ title: "Admin — TVB" }, { name: "robots", content: "noindex" }] }),
@@ -232,7 +233,11 @@ function ContentForm({ kind, open, onOpenChange, editing, onSaved }: { kind: "ne
             </div>
             <div><Label>Author</Label><Input value={form.author_name || ""} onChange={(e) => setForm({ ...form, author_name: e.target.value })} /></div>
           </div>
-          <div><Label>{isNews ? "Featured Image URL" : "Cover Image URL"}</Label><Input value={(isNews ? form.featured_image : form.cover_image) || ""} onChange={(e) => setForm({ ...form, [isNews ? "featured_image" : "cover_image"]: e.target.value })} placeholder="Paste a URL or upload from Media tab" /></div>
+          <ImageField
+            label={isNews ? "Featured Image" : "Cover Image"}
+            value={(isNews ? form.featured_image : form.cover_image) || ""}
+            onChange={(url) => setForm({ ...form, [isNews ? "featured_image" : "cover_image"]: url })}
+          />
           <div><Label>Short Description</Label><Textarea rows={2} value={form.short_description || ""} onChange={(e) => setForm({ ...form, short_description: e.target.value })} /></div>
           <div><Label>Content (HTML or text)</Label><Textarea rows={10} value={form.content || ""} onChange={(e) => setForm({ ...form, content: e.target.value })} /></div>
           <div><Label>Tags (comma separated)</Label><Input value={form.tags || ""} onChange={(e) => setForm({ ...form, tags: e.target.value })} /></div>
@@ -248,7 +253,7 @@ function ContentForm({ kind, open, onOpenChange, editing, onSaved }: { kind: "ne
               <div><Label>Meta Title</Label><Input value={form.meta_title || ""} onChange={(e) => setForm({ ...form, meta_title: e.target.value })} /></div>
               <div><Label>Meta Description</Label><Textarea rows={2} value={form.meta_description || ""} onChange={(e) => setForm({ ...form, meta_description: e.target.value })} /></div>
               <div><Label>Canonical URL</Label><Input value={form.canonical_url || ""} onChange={(e) => setForm({ ...form, canonical_url: e.target.value })} /></div>
-              <div><Label>OG Image URL</Label><Input value={form.og_image || ""} onChange={(e) => setForm({ ...form, og_image: e.target.value })} /></div>
+              <ImageField label="OG Image" value={form.og_image || ""} onChange={(url) => setForm({ ...form, og_image: url })} />
             </div>
           </details>
           <details className="border border-border rounded p-3">
@@ -347,7 +352,7 @@ function CategoryManager() {
         <div><Label>Name</Label><Input value={form.name || ""} onChange={(e) => setForm({ ...form, name: e.target.value, slug: form.slug || slugify(e.target.value) })} /></div>
         <div><Label>Slug</Label><Input value={form.slug || ""} onChange={(e) => setForm({ ...form, slug: slugify(e.target.value) })} /></div>
         <div><Label>Description</Label><Textarea rows={2} value={form.description || ""} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
-        <div><Label>Image URL</Label><Input value={form.image_url || ""} onChange={(e) => setForm({ ...form, image_url: e.target.value })} /></div>
+        <ImageField label="Image" value={form.image_url || ""} onChange={(url) => setForm({ ...form, image_url: url })} />
         <div className="flex gap-2"><Button onClick={save} className="bg-brand text-brand-foreground">{editingId ? "Update" : "Add"}</Button>
           {editingId && <Button variant="outline" onClick={() => { setEditingId(null); setForm({}); }}>Cancel</Button>}
         </div>
